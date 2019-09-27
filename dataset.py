@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from PIL import Image
@@ -9,7 +10,7 @@ class ImageFolderWithName(datasets.ImageFolder):
         self.transforms = transforms.Compose([
             transforms.Resize(shape),
             transforms.RandomCrop((shape, shape)),
-            transforms.RandomHorizontalFlip()
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])

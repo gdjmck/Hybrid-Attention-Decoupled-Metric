@@ -80,7 +80,8 @@ def ca_regularization(w):
     return (w_norm * torch.eye(out_dim)).sum()
 
 def train(dataset, device):
-    for i, x in enumerate(dataset):
+    for i, batch in enumerate(dataset):
+        x, y = batch
         x = x.to(device)
 
         cams, embeddings, adv, adv_reverse = model(x)

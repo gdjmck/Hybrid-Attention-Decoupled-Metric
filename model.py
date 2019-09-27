@@ -70,11 +70,11 @@ class AttentionDecoupleMetric(nn.Module):
                                                     nn.Linear(480, 64, bias=False),
                                                     nn.ReLU(),
                                                     nn.Linear(64, 480),
-                                                    torch.Sigmoid()
+                                                    nn.Sigmoid()
                                                 ) 
                                     for i in range(self.cams)])
 
-        self.CA_sub = nn.Sequential(nn.Linear(512//self.cams, 256), nn.ReLu(), nn.Linear(256, 128))
+        self.CA_sub = nn.Sequential(nn.Linear(512//self.cams, 256), nn.ReLU(), nn.Linear(256, 128))
 
         self.CA_sub_adv = nn.Sequential(GradientReversal(), self.CA_sub)
 
@@ -119,7 +119,7 @@ class AttentionDecoupleMetric(nn.Module):
         # incept4e and incept5b are middle layer of GNet
         # then used to calculate OAM
         incept4e = self.incept4e(feat)
-        incept5b = self.incept5b(feat)
+        incept5b = self.incept5b(incept4e)
         oam = (self.OAM(incept4e) + self.OAM(incept5b)) / 2
         # N x 480 x 14 x 14
         caps = [feat * self.CAMs[i](feat).view(batch_size, 1, 1, -1) for i in range(self.cams)]
