@@ -74,9 +74,11 @@ class AttentionDecoupleMetric(nn.Module):
                                                 ) 
                                     for i in range(self.cams)])
 
-        self.CA_sub = nn.Sequential(nn.Linear(1024, 256), nn.ReLu(), nn.Linear(256, 128))
+        self.CA_sub = nn.Sequential(nn.Linear(512//self.cams, 256), nn.ReLu(), nn.Linear(256, 128))
 
         self.CA_sub_adv = nn.Sequential(GradientReversal(), self.CA_sub)
+
+        self.CA_learners = nn.ModuleList([nn.Linear(1024, 512//self.cams) for i in range(self.cams)])
 
     def OAM(self, x):
         '''
@@ -122,12 +124,13 @@ class AttentionDecoupleMetric(nn.Module):
         # N x 480 x 14 x 14
         caps = [feat * self.CAMs[i](feat).view(batch_size, 1, 1, -1) for i in range(self.cams)]
         # #cams of N x 480 x 14 x 14
-        cams = [self.GNet(caps[i]).view(batch_size, -1) for i in range(self.cams)]
+        cams = [self.GNet(caps[i]).view(batch_size, -1) for i in range(self.cams)] # each of size N x 1024
+        embeddings = [self.CA_learners[i](cams[i]) for i in range(self.cams)]
 
-        embeddings_adv = [self.CA_sub_adv(cams[i]) for i in range(self.cams)]
-        embeddings = [self.CA_sub(cams[i]) for i in range(self.cams)]
+        adv_reverse = [self.CA_sub_adv(embeddings[i]) for i in range(self.cams)]
+        adv = [self.CA_sub(embeddings[i]) for i in range(self.cams)]
 
-        return cams, embeddings, embeddings_adv
+        return cams, embeddings, adv, adv_reverse
 
 if __name__ == '__main__':
     googlenet = models.googlenet(pretrained=False)
